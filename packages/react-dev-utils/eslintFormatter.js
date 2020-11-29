@@ -14,6 +14,8 @@ const table = require('text-table');
 
 const cwd = process.cwd();
 
+const emitErrorsAsWarnings = process.env.ESLINT_BUILD_ON_ERROR === 'true';
+
 function isError(message) {
   if (message.fatal || message.severity === 2) {
     return true;
@@ -69,7 +71,10 @@ function formatter(results) {
 
     // add color to rule keywords
     messages.forEach(m => {
-      m[4] = m[2] === 'error' ? chalk.red(m[4]) : chalk.yellow(m[4]);
+      m[4] =
+        m[2] === 'error' && !emitErrorsAsWarnings
+          ? chalk.red(m[4])
+          : chalk.yellow(m[4]);
       m.splice(2, 1);
     });
 
@@ -87,7 +92,7 @@ function formatter(results) {
     output += `${outputTable}\n\n`;
   });
 
-  if (reportContainsErrorRuleIDs) {
+  if (reportContainsErrorRuleIDs && !emitErrorsAsWarnings) {
     // Unlike with warnings, we have to do it here.
     // We have similar code in react-scripts for warnings,
     // but warnings can appear in multiple files so we only
